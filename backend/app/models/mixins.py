@@ -1,16 +1,20 @@
-"""Shared SQLAlchemy column helpers and mixins (Sprint 02)."""
+"""Shared SQLAlchemy column helpers and mixins (Sprint 02).
+
+NOTE: Use CHAR(36) for all UUID columns to match the live DB schema which was
+created from schema.sql using CHAR(36) for all PK/FK columns.
+"""
 
 from __future__ import annotations
 
 from datetime import datetime
 from typing import Optional
 
-from sqlalchemy import DateTime, ForeignKey, String, func
+from sqlalchemy import CHAR, DateTime, ForeignKey, func
 from sqlalchemy.orm import Mapped, mapped_column
 
 
 def uuid_pk() -> Mapped[str]:
-    return mapped_column(String(36), primary_key=True)
+    return mapped_column(CHAR(36), primary_key=True)
 
 
 def uuid_fk(
@@ -26,7 +30,7 @@ def uuid_fk(
     if ondelete:
         fk_kwargs["ondelete"] = ondelete
     return mapped_column(
-        String(36),
+        CHAR(36),
         ForeignKey(column, **fk_kwargs),
         nullable=nullable,
         primary_key=primary_key,
@@ -57,7 +61,7 @@ class SoftDeleteMixin:
 
 class TenantOwnedMixin:
     tenant_id: Mapped[str] = mapped_column(
-        String(36),
+        CHAR(36),
         ForeignKey("tenants.id", onupdate="CASCADE", ondelete="CASCADE"),
         nullable=False,
         index=True,
