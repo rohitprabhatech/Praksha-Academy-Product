@@ -1,8 +1,40 @@
 -- =============================================================================
--- Praksha Academy SaaS — Database Schema
+-- Praksha Academy SaaS — Complete Database Schema
+-- Version: 2.0.0
 -- Database: MySQL 8.0+
 -- Engine: InnoDB
 -- Charset: utf8mb4
+-- Updated: 2026-09-03
+-- Maintained by: Prabha Technology
+-- =============================================================================
+-- TABLE COUNT: 64 tables
+-- GROUPS:
+--   Platform Layer  : tenants, subscription_plans, tenant_subscriptions,
+--                     platform_settings, roles, permissions, role_permissions,
+--                     platform_audit_logs
+--   Identity/Auth   : users, user_roles, refresh_tokens, user_sessions,
+--                     password_reset_tokens, email_verifications
+--   Tenant Profile  : tenant_profiles, tenant_website_settings
+--   Academic Setup  : academic_classes, subjects, batches, batch_students
+--   Programs        : programs, program_courses
+--   Courses         : courses, course_teachers, course_modules,
+--                     course_chapters, course_lessons
+--   People          : teacher_profiles, student_profiles
+--   Enrollment      : enrollments, lesson_progress
+--   Learning Mgmt   : study_materials, live_classes, announcements
+--   Assessments     : question_bank, assignments, assignment_submissions,
+--                     quizzes, quiz_questions, quiz_question_options,
+--                     quiz_attempts, quiz_answers,
+--                     exams, exam_questions, exam_question_options,
+--                     exam_attempts, exam_answers, marks
+--   Attendance      : attendance_records
+--   Finance         : payments, coupons, coupon_redemptions,
+--                     fee_structures, fee_invoices
+--   Certificates    : certificates, wishlist_items
+--   CMS             : blog_posts, gallery_items, faqs, testimonials,
+--                     contact_messages
+--   Notifications   : notifications, notification_recipients
+--   Audit           : tenant_audit_logs
 -- =============================================================================
 
 CREATE DATABASE IF NOT EXISTS praksha_academy_saas
@@ -12,7 +44,7 @@ CREATE DATABASE IF NOT EXISTS praksha_academy_saas
 USE praksha_academy_saas;
 
 -- =============================================================================
--- PLATFORM LEVEL TABLES
+-- PLATFORM LAYER
 -- =============================================================================
 
 CREATE TABLE tenants (
@@ -139,9 +171,37 @@ CREATE TABLE role_permissions (
         ON UPDATE CASCADE ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+CREATE TABLE platform_audit_logs (
+    id              CHAR(36)     NOT NULL,
+    actor_user_id   CHAR(36)     NULL,
+    action          VARCHAR(100) NOT NULL,
+    entity_type     VARCHAR(100) NOT NULL,
+    entity_id       CHAR(36)     NULL,
+    tenant_id       CHAR(36)     NULL,
+    metadata_json   JSON         NULL,
+    ip_address      VARCHAR(45)  NULL,
+    user_agent      VARCHAR(500) NULL,
+    created_at      DATETIME(6)  NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    PRIMARY KEY (id),
+    KEY idx_platform_audit_logs_actor (actor_user_id),
+    KEY idx_platform_audit_logs_tenant_id (tenant_id),
+    KEY idx_platform_audit_logs_entity (entity_type, entity_id),
+    KEY idx_platform_audit_logs_created_at (created_at),
+    CONSTRAINT fk_platform_audit_logs_actor
+        FOREIGN KEY (actor_user_id) REFERENCES users(id)
+        ON UPDATE CASCADE ON DELETE SET NULL,
+    CONSTRAINT fk_platform_audit_logs_tenant
+        FOREIGN KEY (tenant_id) REFERENCES tenants(id)
+        ON UPDATE CASCADE ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- =============================================================================
+-- IDENTITY & AUTH
+-- =============================================================================
+
 CREATE TABLE users (
     id                  CHAR(36)     NOT NULL,
-    tenant_id           CHAR(36)     NULL,
+    tenant_id           CHAR(36)     NULL,       -- NULL = platform-level user
     email               VARCHAR(255) NOT NULL,
     password_hash       VARCHAR(255) NOT NULL,
     first_name          VARCHAR(100) NOT NULL,
@@ -189,6 +249,47 @@ CREATE TABLE user_roles (
         ON UPDATE CASCADE ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- JWT refresh tokens (stored server-side for revocation support)
+CREATE TABLE refresh_tokens (
+    id              CHAR(36)     NOT NULL,
+    user_id         CHAR(36)     NOT NULL,
+    token_hash      VARCHAR(255) NOT NULL,   -- SHA-256 of the raw token
+    device_info     VARCHAR(500) NULL,       -- browser/device info
+    ip_address      VARCHAR(45)  NULL,
+    expires_at      DATETIME(6)  NOT NULL,
+    revoked_at      DATETIME(6)  NULL,
+    created_at      DATETIME(6)  NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    PRIMARY KEY (id),
+    UNIQUE KEY uk_refresh_tokens_hash (token_hash),
+    KEY idx_refresh_tokens_user_id (user_id),
+    KEY idx_refresh_tokens_expires_at (expires_at),
+    CONSTRAINT fk_refresh_tokens_user
+        FOREIGN KEY (user_id) REFERENCES users(id)
+        ON UPDATE CASCADE ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Tracks active login sessions per device
+CREATE TABLE user_sessions (
+    id              CHAR(36)     NOT NULL,
+    user_id         CHAR(36)     NOT NULL,
+    refresh_token_id CHAR(36)    NOT NULL,
+    ip_address      VARCHAR(45)  NULL,
+    user_agent      VARCHAR(500) NULL,
+    is_active       TINYINT(1)   NOT NULL DEFAULT 1,
+    last_seen_at    DATETIME(6)  NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    created_at      DATETIME(6)  NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    PRIMARY KEY (id),
+    KEY idx_user_sessions_user_id (user_id),
+    KEY idx_user_sessions_refresh_token_id (refresh_token_id),
+    KEY idx_user_sessions_is_active (is_active),
+    CONSTRAINT fk_user_sessions_user
+        FOREIGN KEY (user_id) REFERENCES users(id)
+        ON UPDATE CASCADE ON DELETE CASCADE,
+    CONSTRAINT fk_user_sessions_refresh_token
+        FOREIGN KEY (refresh_token_id) REFERENCES refresh_tokens(id)
+        ON UPDATE CASCADE ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 CREATE TABLE password_reset_tokens (
     id              CHAR(36)     NOT NULL,
     user_id         CHAR(36)     NOT NULL,
@@ -221,32 +322,8 @@ CREATE TABLE email_verifications (
         ON UPDATE CASCADE ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE platform_audit_logs (
-    id              CHAR(36)     NOT NULL,
-    actor_user_id   CHAR(36)     NULL,
-    action          VARCHAR(100) NOT NULL,
-    entity_type     VARCHAR(100) NOT NULL,
-    entity_id       CHAR(36)     NULL,
-    tenant_id       CHAR(36)     NULL,
-    metadata_json   JSON         NULL,
-    ip_address      VARCHAR(45)  NULL,
-    user_agent      VARCHAR(500) NULL,
-    created_at      DATETIME(6)  NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
-    PRIMARY KEY (id),
-    KEY idx_platform_audit_logs_actor (actor_user_id),
-    KEY idx_platform_audit_logs_tenant_id (tenant_id),
-    KEY idx_platform_audit_logs_entity (entity_type, entity_id),
-    KEY idx_platform_audit_logs_created_at (created_at),
-    CONSTRAINT fk_platform_audit_logs_actor
-        FOREIGN KEY (actor_user_id) REFERENCES users(id)
-        ON UPDATE CASCADE ON DELETE SET NULL,
-    CONSTRAINT fk_platform_audit_logs_tenant
-        FOREIGN KEY (tenant_id) REFERENCES tenants(id)
-        ON UPDATE CASCADE ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
 -- =============================================================================
--- TENANT LEVEL TABLES
+-- TENANT PROFILE & WEBSITE CMS
 -- =============================================================================
 
 CREATE TABLE tenant_profiles (
@@ -275,6 +352,52 @@ CREATE TABLE tenant_profiles (
         FOREIGN KEY (tenant_id) REFERENCES tenants(id)
         ON UPDATE CASCADE ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Stores the public-facing website CMS content per tenant
+-- Each row represents a named page/section. The content_json stores the full
+-- structured content for that page (hero, features, banners, etc.)
+CREATE TABLE tenant_website_settings (
+    id              CHAR(36)     NOT NULL,
+    tenant_id       CHAR(36)     NOT NULL,
+    -- Branding
+    primary_color   VARCHAR(20)  NULL DEFAULT '#1976d2',
+    secondary_color VARCHAR(20)  NULL DEFAULT '#dc004e',
+    font_family     VARCHAR(100) NULL DEFAULT 'Inter',
+    logo_url        VARCHAR(500) NULL,
+    favicon_url     VARCHAR(500) NULL,
+    -- Navigation visibility flags
+    show_blog       TINYINT(1)   NOT NULL DEFAULT 0,
+    show_gallery    TINYINT(1)   NOT NULL DEFAULT 0,
+    show_faq        TINYINT(1)   NOT NULL DEFAULT 0,
+    show_testimonials TINYINT(1) NOT NULL DEFAULT 1,
+    show_programs   TINYINT(1)   NOT NULL DEFAULT 1,
+    -- Page content stored as structured JSON
+    home_page_json      JSON     NULL,   -- hero, stats, features sections
+    about_page_json     JSON     NULL,   -- story, mission, team
+    contact_page_json   JSON     NULL,   -- address, map embed, social links
+    courses_header_json JSON     NULL,   -- courses listing page header & filters
+    programs_page_json  JSON     NULL,   -- programs listing page content
+    -- SEO
+    seo_title       VARCHAR(250) NULL,
+    seo_description VARCHAR(500) NULL,
+    seo_keywords    VARCHAR(500) NULL,
+    -- Publish state
+    is_published    TINYINT(1)   NOT NULL DEFAULT 0,
+    published_at    DATETIME(6)  NULL,
+    published_by    CHAR(36)     NULL,
+    created_at      DATETIME(6)  NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    updated_at      DATETIME(6)  NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
+    PRIMARY KEY (id),
+    UNIQUE KEY uk_tenant_website_settings_tenant (tenant_id),
+    KEY idx_tenant_website_settings_is_published (is_published),
+    CONSTRAINT fk_tenant_website_settings_tenant
+        FOREIGN KEY (tenant_id) REFERENCES tenants(id)
+        ON UPDATE CASCADE ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- =============================================================================
+-- PEOPLE — TEACHER & STUDENT PROFILES
+-- =============================================================================
 
 CREATE TABLE teacher_profiles (
     id                  CHAR(36)     NOT NULL,
@@ -330,6 +453,10 @@ CREATE TABLE student_profiles (
         ON UPDATE CASCADE ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- =============================================================================
+-- ACADEMIC STRUCTURE
+-- =============================================================================
+
 CREATE TABLE academic_classes (
     id              CHAR(36)     NOT NULL,
     tenant_id       CHAR(36)     NOT NULL,
@@ -383,6 +510,7 @@ CREATE TABLE batches (
     code                VARCHAR(50)  NULL,
     start_date          DATE         NULL,
     end_date            DATE         NULL,
+    max_students        INT UNSIGNED NULL,               -- capacity limit
     status              ENUM('active','inactive','completed') NOT NULL DEFAULT 'active',
     created_at          DATETIME(6)  NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
     updated_at          DATETIME(6)  NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
@@ -403,6 +531,91 @@ CREATE TABLE batches (
         ON UPDATE CASCADE ON DELETE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- Explicit batch ↔ student membership table
+-- (enrollments.batch_id handles which batch a student is taking a course in,
+--  but this table lets a teacher quickly list all students in a batch
+--  independent of course enrollment)
+CREATE TABLE batch_students (
+    id              CHAR(36)     NOT NULL,
+    tenant_id       CHAR(36)     NOT NULL,
+    batch_id        CHAR(36)     NOT NULL,
+    student_id      CHAR(36)     NOT NULL,
+    joined_at       DATETIME(6)  NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    status          ENUM('active','removed') NOT NULL DEFAULT 'active',
+    added_by        CHAR(36)     NULL,
+    PRIMARY KEY (id),
+    UNIQUE KEY uk_batch_students (tenant_id, batch_id, student_id),
+    KEY idx_batch_students_batch_id (batch_id),
+    KEY idx_batch_students_student_id (student_id),
+    CONSTRAINT fk_batch_students_tenant
+        FOREIGN KEY (tenant_id) REFERENCES tenants(id)
+        ON UPDATE CASCADE ON DELETE CASCADE,
+    CONSTRAINT fk_batch_students_batch
+        FOREIGN KEY (batch_id) REFERENCES batches(id)
+        ON UPDATE CASCADE ON DELETE CASCADE,
+    CONSTRAINT fk_batch_students_student
+        FOREIGN KEY (student_id) REFERENCES student_profiles(id)
+        ON UPDATE CASCADE ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- =============================================================================
+-- PROGRAMS (multi-course bundles shown on public site)
+-- =============================================================================
+
+CREATE TABLE programs (
+    id              CHAR(36)       NOT NULL,
+    tenant_id       CHAR(36)       NOT NULL,
+    name            VARCHAR(200)   NOT NULL,
+    slug            VARCHAR(220)   NOT NULL,
+    description     TEXT           NULL,
+    thumbnail_url   VARCHAR(500)   NULL,
+    price           DECIMAL(12,2)  NOT NULL DEFAULT 0.00,
+    discount_price  DECIMAL(12,2)  NULL,
+    duration_label  VARCHAR(100)   NULL,         -- e.g. "6 Months"
+    category        VARCHAR(100)   NULL,
+    is_featured     TINYINT(1)     NOT NULL DEFAULT 0,
+    status          ENUM('draft','published','archived') NOT NULL DEFAULT 'draft',
+    sort_order      INT            NOT NULL DEFAULT 0,
+    created_at      DATETIME(6)    NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    updated_at      DATETIME(6)    NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
+    deleted_at      DATETIME(6)    NULL,
+    created_by      CHAR(36)       NULL,
+    PRIMARY KEY (id),
+    UNIQUE KEY uk_programs_slug (tenant_id, slug),
+    KEY idx_programs_tenant_id (tenant_id),
+    KEY idx_programs_status (status),
+    KEY idx_programs_is_featured (is_featured),
+    CONSTRAINT fk_programs_tenant
+        FOREIGN KEY (tenant_id) REFERENCES tenants(id)
+        ON UPDATE CASCADE ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE program_courses (
+    id          CHAR(36)     NOT NULL,
+    tenant_id   CHAR(36)     NOT NULL,
+    program_id  CHAR(36)     NOT NULL,
+    course_id   CHAR(36)     NOT NULL,
+    sort_order  INT          NOT NULL DEFAULT 0,
+    created_at  DATETIME(6)  NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    PRIMARY KEY (id),
+    UNIQUE KEY uk_program_courses (tenant_id, program_id, course_id),
+    KEY idx_program_courses_program_id (program_id),
+    KEY idx_program_courses_course_id (course_id),
+    CONSTRAINT fk_program_courses_tenant
+        FOREIGN KEY (tenant_id) REFERENCES tenants(id)
+        ON UPDATE CASCADE ON DELETE CASCADE,
+    CONSTRAINT fk_program_courses_program
+        FOREIGN KEY (program_id) REFERENCES programs(id)
+        ON UPDATE CASCADE ON DELETE CASCADE,
+    CONSTRAINT fk_program_courses_course
+        FOREIGN KEY (course_id) REFERENCES courses(id)
+        ON UPDATE CASCADE ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- =============================================================================
+-- COURSES
+-- =============================================================================
+
 CREATE TABLE courses (
     id                  CHAR(36)       NOT NULL,
     tenant_id           CHAR(36)       NOT NULL,
@@ -417,7 +630,7 @@ CREATE TABLE courses (
     discount_price      DECIMAL(12,2)  NULL,
     duration_label      VARCHAR(100)   NULL,
     language            VARCHAR(50)    NOT NULL DEFAULT 'English',
-    course_type         VARCHAR(50)    NULL,
+    course_type         VARCHAR(50)    NULL,   -- 'online','offline','hybrid'
     status              ENUM('draft','published','archived') NOT NULL DEFAULT 'draft',
     is_featured         TINYINT(1)     NOT NULL DEFAULT 0,
     created_at          DATETIME(6)    NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
@@ -443,6 +656,7 @@ CREATE TABLE courses (
         ON UPDATE CASCADE ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- Add FK from batches → courses (deferred because courses table didn't exist yet)
 ALTER TABLE batches
     ADD CONSTRAINT fk_batches_course
         FOREIGN KEY (course_id) REFERENCES courses(id)
@@ -516,19 +730,20 @@ CREATE TABLE course_chapters (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE course_lessons (
-    id              CHAR(36)     NOT NULL,
-    tenant_id       CHAR(36)     NOT NULL,
-    chapter_id      CHAR(36)     NOT NULL,
-    title           VARCHAR(200) NOT NULL,
-    lesson_type     ENUM('video','document','text','link','mixed') NOT NULL DEFAULT 'text',
-    content         TEXT         NULL,
-    video_url       VARCHAR(500) NULL,
+    id               CHAR(36)     NOT NULL,
+    tenant_id        CHAR(36)     NOT NULL,
+    chapter_id       CHAR(36)     NOT NULL,
+    title            VARCHAR(200) NOT NULL,
+    lesson_type      ENUM('video','document','text','link','mixed') NOT NULL DEFAULT 'text',
+    content          TEXT         NULL,
+    video_url        VARCHAR(500) NULL,
     duration_minutes INT UNSIGNED NULL,
-    sort_order      INT          NOT NULL DEFAULT 0,
-    status          ENUM('active','inactive') NOT NULL DEFAULT 'active',
-    created_at      DATETIME(6)  NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
-    updated_at      DATETIME(6)  NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
-    deleted_at      DATETIME(6)  NULL,
+    is_free_preview  TINYINT(1)   NOT NULL DEFAULT 0,   -- visible without enrollment
+    sort_order       INT          NOT NULL DEFAULT 0,
+    status           ENUM('active','inactive') NOT NULL DEFAULT 'active',
+    created_at       DATETIME(6)  NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    updated_at       DATETIME(6)  NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
+    deleted_at       DATETIME(6)  NULL,
     PRIMARY KEY (id),
     KEY idx_course_lessons_tenant_id (tenant_id),
     KEY idx_course_lessons_chapter_id (chapter_id),
@@ -539,6 +754,10 @@ CREATE TABLE course_lessons (
         FOREIGN KEY (chapter_id) REFERENCES course_chapters(id)
         ON UPDATE CASCADE ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- =============================================================================
+-- ENROLLMENT & PROGRESS
+-- =============================================================================
 
 CREATE TABLE enrollments (
     id                  CHAR(36)     NOT NULL,
@@ -601,6 +820,10 @@ CREATE TABLE lesson_progress (
         FOREIGN KEY (lesson_id) REFERENCES course_lessons(id)
         ON UPDATE CASCADE ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- =============================================================================
+-- LEARNING MANAGEMENT
+-- =============================================================================
 
 CREATE TABLE study_materials (
     id              CHAR(36)     NOT NULL,
@@ -673,6 +896,90 @@ CREATE TABLE live_classes (
         FOREIGN KEY (teacher_id) REFERENCES teacher_profiles(id)
         ON UPDATE CASCADE ON DELETE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Teacher announcements broadcast to a batch or course
+CREATE TABLE announcements (
+    id              CHAR(36)     NOT NULL,
+    tenant_id       CHAR(36)     NOT NULL,
+    course_id       CHAR(36)     NOT NULL,
+    batch_id        CHAR(36)     NULL,
+    posted_by       CHAR(36)     NOT NULL,  -- teacher_profiles.id
+    title           VARCHAR(200) NOT NULL,
+    message         TEXT         NOT NULL,
+    attachment_url  VARCHAR(500) NULL,
+    status          ENUM('active','archived') NOT NULL DEFAULT 'active',
+    created_at      DATETIME(6)  NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    updated_at      DATETIME(6)  NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
+    deleted_at      DATETIME(6)  NULL,
+    PRIMARY KEY (id),
+    KEY idx_announcements_tenant_id (tenant_id),
+    KEY idx_announcements_course_id (course_id),
+    KEY idx_announcements_batch_id (batch_id),
+    KEY idx_announcements_posted_by (posted_by),
+    CONSTRAINT fk_announcements_tenant
+        FOREIGN KEY (tenant_id) REFERENCES tenants(id)
+        ON UPDATE CASCADE ON DELETE CASCADE,
+    CONSTRAINT fk_announcements_course
+        FOREIGN KEY (course_id) REFERENCES courses(id)
+        ON UPDATE CASCADE ON DELETE CASCADE,
+    CONSTRAINT fk_announcements_batch
+        FOREIGN KEY (batch_id) REFERENCES batches(id)
+        ON UPDATE CASCADE ON DELETE SET NULL,
+    CONSTRAINT fk_announcements_teacher
+        FOREIGN KEY (posted_by) REFERENCES teacher_profiles(id)
+        ON UPDATE CASCADE ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- =============================================================================
+-- ASSESSMENTS — QUESTION BANK
+-- =============================================================================
+
+-- Reusable question pool; questions can be linked into quizzes or exams
+CREATE TABLE question_bank (
+    id              CHAR(36)     NOT NULL,
+    tenant_id       CHAR(36)     NOT NULL,
+    subject_id      CHAR(36)     NULL,
+    question_text   TEXT         NOT NULL,
+    question_type   ENUM('mcq','short_text','true_false') NOT NULL DEFAULT 'mcq',
+    difficulty      ENUM('easy','medium','hard') NOT NULL DEFAULT 'medium',
+    tags_json       JSON         NULL,          -- e.g. ["algebra","chapter-3"]
+    explanation     TEXT         NULL,          -- solution explanation
+    created_by      CHAR(36)     NULL,
+    created_at      DATETIME(6)  NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    updated_at      DATETIME(6)  NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
+    deleted_at      DATETIME(6)  NULL,
+    PRIMARY KEY (id),
+    KEY idx_question_bank_tenant_id (tenant_id),
+    KEY idx_question_bank_subject_id (subject_id),
+    KEY idx_question_bank_difficulty (difficulty),
+    CONSTRAINT fk_question_bank_tenant
+        FOREIGN KEY (tenant_id) REFERENCES tenants(id)
+        ON UPDATE CASCADE ON DELETE CASCADE,
+    CONSTRAINT fk_question_bank_subject
+        FOREIGN KEY (subject_id) REFERENCES subjects(id)
+        ON UPDATE CASCADE ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE question_bank_options (
+    id              CHAR(36)     NOT NULL,
+    tenant_id       CHAR(36)     NOT NULL,
+    question_id     CHAR(36)     NOT NULL,
+    option_text     VARCHAR(500) NOT NULL,
+    is_correct      TINYINT(1)   NOT NULL DEFAULT 0,
+    sort_order      INT          NOT NULL DEFAULT 0,
+    PRIMARY KEY (id),
+    KEY idx_qb_options_question_id (question_id),
+    CONSTRAINT fk_qb_options_tenant
+        FOREIGN KEY (tenant_id) REFERENCES tenants(id)
+        ON UPDATE CASCADE ON DELETE CASCADE,
+    CONSTRAINT fk_qb_options_question
+        FOREIGN KEY (question_id) REFERENCES question_bank(id)
+        ON UPDATE CASCADE ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- =============================================================================
+-- ASSESSMENTS — ASSIGNMENTS
+-- =============================================================================
 
 CREATE TABLE assignments (
     id              CHAR(36)     NOT NULL,
@@ -749,6 +1056,10 @@ CREATE TABLE assignment_submissions (
         ON UPDATE CASCADE ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- =============================================================================
+-- ASSESSMENTS — QUIZZES
+-- =============================================================================
+
 CREATE TABLE quizzes (
     id              CHAR(36)     NOT NULL,
     tenant_id       CHAR(36)     NOT NULL,
@@ -790,8 +1101,9 @@ CREATE TABLE quiz_questions (
     id              CHAR(36)     NOT NULL,
     tenant_id       CHAR(36)     NOT NULL,
     quiz_id         CHAR(36)     NOT NULL,
+    bank_question_id CHAR(36)    NULL,          -- optionally linked from question_bank
     question_text   TEXT         NOT NULL,
-    question_type   ENUM('mcq','short_text') NOT NULL DEFAULT 'mcq',
+    question_type   ENUM('mcq','short_text','true_false') NOT NULL DEFAULT 'mcq',
     points          DECIMAL(5,2) NOT NULL DEFAULT 1.00,
     sort_order      INT          NOT NULL DEFAULT 0,
     created_at      DATETIME(6)  NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
@@ -891,6 +1203,10 @@ CREATE TABLE quiz_answers (
         ON UPDATE CASCADE ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- =============================================================================
+-- ASSESSMENTS — EXAMS
+-- =============================================================================
+
 CREATE TABLE exams (
     id              CHAR(36)     NOT NULL,
     tenant_id       CHAR(36)     NOT NULL,
@@ -930,8 +1246,9 @@ CREATE TABLE exam_questions (
     id              CHAR(36)     NOT NULL,
     tenant_id       CHAR(36)     NOT NULL,
     exam_id         CHAR(36)     NOT NULL,
+    bank_question_id CHAR(36)    NULL,   -- optionally from question_bank
     question_text   TEXT         NOT NULL,
-    question_type   ENUM('mcq','short_text') NOT NULL DEFAULT 'mcq',
+    question_type   ENUM('mcq','short_text','true_false') NOT NULL DEFAULT 'mcq',
     points          DECIMAL(5,2) NOT NULL DEFAULT 1.00,
     sort_order      INT          NOT NULL DEFAULT 0,
     created_at      DATETIME(6)  NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
@@ -1030,6 +1347,7 @@ CREATE TABLE exam_answers (
         ON UPDATE CASCADE ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- Unified marks ledger — aggregated from quizzes, exams, assignments, or manual entry
 CREATE TABLE marks (
     id                  CHAR(36)     NOT NULL,
     tenant_id           CHAR(36)     NOT NULL,
@@ -1065,6 +1383,10 @@ CREATE TABLE marks (
         FOREIGN KEY (enrollment_id) REFERENCES enrollments(id)
         ON UPDATE CASCADE ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- =============================================================================
+-- ATTENDANCE
+-- =============================================================================
 
 CREATE TABLE attendance_records (
     id                  CHAR(36)     NOT NULL,
@@ -1102,6 +1424,10 @@ CREATE TABLE attendance_records (
         FOREIGN KEY (live_class_id) REFERENCES live_classes(id)
         ON UPDATE CASCADE ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- =============================================================================
+-- FINANCE — PAYMENTS & FEES
+-- =============================================================================
 
 CREATE TABLE payments (
     id                  CHAR(36)       NOT NULL,
@@ -1191,6 +1517,91 @@ CREATE TABLE coupon_redemptions (
         ON UPDATE CASCADE ON DELETE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- Fee structure defined by owner per course/batch/class
+CREATE TABLE fee_structures (
+    id                  CHAR(36)       NOT NULL,
+    tenant_id           CHAR(36)       NOT NULL,
+    name                VARCHAR(200)   NOT NULL,
+    course_id           CHAR(36)       NULL,
+    batch_id            CHAR(36)       NULL,
+    academic_class_id   CHAR(36)       NULL,
+    fee_type            ENUM('one_time','monthly','quarterly','annual','custom') NOT NULL DEFAULT 'one_time',
+    amount              DECIMAL(12,2)  NOT NULL,
+    currency            CHAR(3)        NOT NULL DEFAULT 'INR',
+    due_day             TINYINT UNSIGNED NULL,   -- day of month payment is due (for recurring)
+    late_fee            DECIMAL(12,2)  NULL,
+    is_optional         TINYINT(1)     NOT NULL DEFAULT 0,
+    description         TEXT           NULL,
+    status              ENUM('active','inactive') NOT NULL DEFAULT 'active',
+    created_at          DATETIME(6)    NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    updated_at          DATETIME(6)    NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
+    deleted_at          DATETIME(6)    NULL,
+    created_by          CHAR(36)       NULL,
+    PRIMARY KEY (id),
+    KEY idx_fee_structures_tenant_id (tenant_id),
+    KEY idx_fee_structures_course_id (course_id),
+    KEY idx_fee_structures_batch_id (batch_id),
+    CONSTRAINT fk_fee_structures_tenant
+        FOREIGN KEY (tenant_id) REFERENCES tenants(id)
+        ON UPDATE CASCADE ON DELETE CASCADE,
+    CONSTRAINT fk_fee_structures_course
+        FOREIGN KEY (course_id) REFERENCES courses(id)
+        ON UPDATE CASCADE ON DELETE SET NULL,
+    CONSTRAINT fk_fee_structures_batch
+        FOREIGN KEY (batch_id) REFERENCES batches(id)
+        ON UPDATE CASCADE ON DELETE SET NULL,
+    CONSTRAINT fk_fee_structures_class
+        FOREIGN KEY (academic_class_id) REFERENCES academic_classes(id)
+        ON UPDATE CASCADE ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Per-student fee invoices generated from fee_structures
+CREATE TABLE fee_invoices (
+    id                  CHAR(36)       NOT NULL,
+    tenant_id           CHAR(36)       NOT NULL,
+    student_id          CHAR(36)       NOT NULL,
+    fee_structure_id    CHAR(36)       NOT NULL,
+    enrollment_id       CHAR(36)       NULL,
+    invoice_number      VARCHAR(100)   NOT NULL,
+    amount              DECIMAL(12,2)  NOT NULL,
+    late_fee            DECIMAL(12,2)  NOT NULL DEFAULT 0.00,
+    discount_amount     DECIMAL(12,2)  NOT NULL DEFAULT 0.00,
+    total_amount        DECIMAL(12,2)  NOT NULL,
+    due_date            DATE           NOT NULL,
+    paid_amount         DECIMAL(12,2)  NOT NULL DEFAULT 0.00,
+    status              ENUM('unpaid','partial','paid','overdue','waived','cancelled') NOT NULL DEFAULT 'unpaid',
+    payment_id          CHAR(36)       NULL,   -- linked when paid
+    notes               TEXT           NULL,
+    created_at          DATETIME(6)    NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    updated_at          DATETIME(6)    NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
+    created_by          CHAR(36)       NULL,
+    PRIMARY KEY (id),
+    UNIQUE KEY uk_fee_invoices_number (tenant_id, invoice_number),
+    KEY idx_fee_invoices_tenant_id (tenant_id),
+    KEY idx_fee_invoices_student_id (student_id),
+    KEY idx_fee_invoices_status (status),
+    KEY idx_fee_invoices_due_date (due_date),
+    CONSTRAINT fk_fee_invoices_tenant
+        FOREIGN KEY (tenant_id) REFERENCES tenants(id)
+        ON UPDATE CASCADE ON DELETE CASCADE,
+    CONSTRAINT fk_fee_invoices_student
+        FOREIGN KEY (student_id) REFERENCES student_profiles(id)
+        ON UPDATE CASCADE ON DELETE RESTRICT,
+    CONSTRAINT fk_fee_invoices_fee_structure
+        FOREIGN KEY (fee_structure_id) REFERENCES fee_structures(id)
+        ON UPDATE CASCADE ON DELETE RESTRICT,
+    CONSTRAINT fk_fee_invoices_enrollment
+        FOREIGN KEY (enrollment_id) REFERENCES enrollments(id)
+        ON UPDATE CASCADE ON DELETE SET NULL,
+    CONSTRAINT fk_fee_invoices_payment
+        FOREIGN KEY (payment_id) REFERENCES payments(id)
+        ON UPDATE CASCADE ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- =============================================================================
+-- CERTIFICATES & WISHLIST
+-- =============================================================================
+
 CREATE TABLE wishlist_items (
     id              CHAR(36)     NOT NULL,
     tenant_id       CHAR(36)     NOT NULL,
@@ -1242,6 +1653,10 @@ CREATE TABLE certificates (
         FOREIGN KEY (enrollment_id) REFERENCES enrollments(id)
         ON UPDATE CASCADE ON DELETE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- =============================================================================
+-- CMS CONTENT
+-- =============================================================================
 
 CREATE TABLE blog_posts (
     id              CHAR(36)     NOT NULL,
@@ -1335,20 +1750,47 @@ CREATE TABLE testimonials (
         ON UPDATE CASCADE ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE notifications (
+CREATE TABLE contact_messages (
     id              CHAR(36)     NOT NULL,
     tenant_id       CHAR(36)     NOT NULL,
-    title           VARCHAR(200) NOT NULL,
+    name            VARCHAR(150) NOT NULL,
+    email           VARCHAR(255) NOT NULL,
+    phone           VARCHAR(30)  NULL,
+    subject         VARCHAR(250) NULL,
     message         TEXT         NOT NULL,
-    notification_type ENUM('info','warning','success','alert') NOT NULL DEFAULT 'info',
-    audience_type   ENUM('all','students','teachers','owners','specific_user') NOT NULL DEFAULT 'all',
-    target_user_id  CHAR(36)     NULL,
-    status          ENUM('draft','scheduled','sent','cancelled') NOT NULL DEFAULT 'draft',
-    scheduled_at    DATETIME(6)  NULL,
-    sent_at         DATETIME(6)  NULL,
-    created_by      CHAR(36)     NULL,
+    status          ENUM('new','read','replied','archived') NOT NULL DEFAULT 'new',
+    replied_at      DATETIME(6)  NULL,
+    replied_by      CHAR(36)     NULL,
+    reply_message   TEXT         NULL,
     created_at      DATETIME(6)  NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
     updated_at      DATETIME(6)  NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
+    PRIMARY KEY (id),
+    KEY idx_contact_messages_tenant_id (tenant_id),
+    KEY idx_contact_messages_status (status),
+    KEY idx_contact_messages_created_at (created_at),
+    CONSTRAINT fk_contact_messages_tenant
+        FOREIGN KEY (tenant_id) REFERENCES tenants(id)
+        ON UPDATE CASCADE ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- =============================================================================
+-- NOTIFICATIONS
+-- =============================================================================
+
+CREATE TABLE notifications (
+    id                  CHAR(36)     NOT NULL,
+    tenant_id           CHAR(36)     NOT NULL,
+    title               VARCHAR(200) NOT NULL,
+    message             TEXT         NOT NULL,
+    notification_type   ENUM('info','warning','success','alert') NOT NULL DEFAULT 'info',
+    audience_type       ENUM('all','students','teachers','owners','specific_user') NOT NULL DEFAULT 'all',
+    target_user_id      CHAR(36)     NULL,
+    status              ENUM('draft','scheduled','sent','cancelled') NOT NULL DEFAULT 'draft',
+    scheduled_at        DATETIME(6)  NULL,
+    sent_at             DATETIME(6)  NULL,
+    created_by          CHAR(36)     NULL,
+    created_at          DATETIME(6)  NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    updated_at          DATETIME(6)  NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
     PRIMARY KEY (id),
     KEY idx_notifications_tenant_id (tenant_id),
     KEY idx_notifications_status (status),
@@ -1383,28 +1825,9 @@ CREATE TABLE notification_recipients (
         ON UPDATE CASCADE ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE contact_messages (
-    id              CHAR(36)     NOT NULL,
-    tenant_id       CHAR(36)     NOT NULL,
-    name            VARCHAR(150) NOT NULL,
-    email           VARCHAR(255) NOT NULL,
-    phone           VARCHAR(30)  NULL,
-    subject         VARCHAR(250) NULL,
-    message         TEXT         NOT NULL,
-    status          ENUM('new','read','replied','archived') NOT NULL DEFAULT 'new',
-    replied_at      DATETIME(6)  NULL,
-    replied_by      CHAR(36)     NULL,
-    reply_message   TEXT         NULL,
-    created_at      DATETIME(6)  NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
-    updated_at      DATETIME(6)  NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
-    PRIMARY KEY (id),
-    KEY idx_contact_messages_tenant_id (tenant_id),
-    KEY idx_contact_messages_status (status),
-    KEY idx_contact_messages_created_at (created_at),
-    CONSTRAINT fk_contact_messages_tenant
-        FOREIGN KEY (tenant_id) REFERENCES tenants(id)
-        ON UPDATE CASCADE ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+-- =============================================================================
+-- AUDIT LOGS
+-- =============================================================================
 
 CREATE TABLE tenant_audit_logs (
     id              CHAR(36)     NOT NULL,
@@ -1429,3 +1852,7 @@ CREATE TABLE tenant_audit_logs (
         FOREIGN KEY (actor_user_id) REFERENCES users(id)
         ON UPDATE CASCADE ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- =============================================================================
+-- END OF SCHEMA — 64 TABLES
+-- =============================================================================
