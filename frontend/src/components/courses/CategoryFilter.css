@@ -1,0 +1,40 @@
+.course-control {
+ min-width: 220px;
+ background: #ffffff;
+}
+
+.course-control .MuiOutlinedInput-root {
+ min-height: 44px;
+ border-radius: 8px;
+ color: #1e293b;
+ font-family: inherit;
+ transition: box-shadow 0.3s ease;
+}
+
+.course-control .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline {
+ border-color: #2563eb;
+}
+
+.course-control .MuiOutlinedInput-root.Mui-focused {
+ box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+}
+
+.course-control .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline {
+ border-color: #2563eb;
+}
+
+.course-control .MuiInputLabel-root {
+ color: #64748b;
+ font-family: inherit;
+}
+
+.course-control .MuiInputLabel-root.Mui-focused {
+ color: #2563eb;
+}
+
+@media (max-width: 575.98px) {
+ .course-control {
+  width: 100%;
+  min-width: 100%;
+ }
+}

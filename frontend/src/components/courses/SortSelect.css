@@ -1,0 +1,10 @@
+.course-sort-select {
+ min-width: 210px;
+}
+
+@media (max-width: 575.98px) {
+ .course-sort-select {
+  width: 100%;
+  min-width: 100%;
+ }
+}

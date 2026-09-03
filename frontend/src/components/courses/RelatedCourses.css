@@ -1,0 +1,14 @@
+.related-courses-section {
+ padding: 56px 0 80px;
+ background: #f1f5f9;
+}
+
+.related-courses-section .course-section-header {
+ margin-bottom: 24px;
+}
+
+@media (max-width: 767.98px) {
+ .related-courses-section {
+  padding: 40px 0 56px;
+ }
+}

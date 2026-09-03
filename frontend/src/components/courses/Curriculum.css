@@ -1,0 +1,128 @@
+.curriculum-section .course-section-header p {
+ margin-top: 8px;
+ color: #64748b;
+ font-size: 14px;
+ font-weight: 700;
+}
+
+.curriculum-accordion-list {
+ border: 1px solid #e2e8f0;
+ border-radius: 8px;
+ overflow: hidden;
+}
+
+.curriculum-accordion.MuiAccordion-root {
+ border-bottom: 1px solid #e2e8f0;
+ box-shadow: none;
+}
+
+.curriculum-accordion.MuiAccordion-root:last-child {
+ border-bottom: 0;
+}
+
+.curriculum-accordion.MuiAccordion-root::before {
+ display: none;
+}
+
+.curriculum-accordion .MuiAccordionSummary-root {
+ min-height: 64px;
+ padding: 0 18px;
+ background: #ffffff;
+ transition: background-color 0.3s ease;
+}
+
+.curriculum-accordion .MuiAccordionSummary-root:hover,
+.curriculum-accordion .MuiAccordionSummary-root.Mui-focusVisible {
+ background: #f8fafc;
+}
+
+.curriculum-accordion .MuiAccordionSummary-content {
+ margin: 14px 0;
+}
+
+.curriculum-accordion .MuiAccordionSummary-expandIconWrapper {
+ color: #2563eb;
+}
+
+.curriculum-section-summary {
+ display: flex;
+ align-items: center;
+ justify-content: space-between;
+ gap: 16px;
+ width: 100%;
+}
+
+.curriculum-section-summary strong {
+ color: #1e293b;
+ font-size: 16px;
+}
+
+.curriculum-section-summary span {
+ flex: 0 0 auto;
+ color: #64748b;
+ font-size: 13px;
+ font-weight: 700;
+}
+
+.curriculum-lesson-list {
+ display: grid;
+ gap: 12px;
+ margin: 0;
+ padding: 4px 0 4px;
+ list-style: none;
+}
+
+.curriculum-lesson-list li {
+ display: flex;
+ align-items: center;
+ justify-content: space-between;
+ gap: 16px;
+ color: #64748b;
+ font-size: 14px;
+}
+
+.curriculum-lesson-list span {
+ display: flex;
+ align-items: center;
+ gap: 10px;
+}
+
+.curriculum-lesson-list svg {
+ flex: 0 0 auto;
+ color: #2563eb;
+}
+
+.curriculum-lesson-list time {
+ flex: 0 0 auto;
+ color: #94a3b8;
+ font-size: 13px;
+}
+
+.curriculum-empty-state {
+ display: flex;
+ align-items: center;
+ gap: 12px;
+ padding: 18px;
+ background: #f8fafc;
+ border: 1px solid #e2e8f0;
+ border-radius: 8px;
+ color: #64748b;
+}
+
+.curriculum-empty-state svg {
+ color: #2563eb;
+}
+
+@media (max-width: 575.98px) {
+ .curriculum-section-summary,
+ .curriculum-lesson-list li {
+  align-items: flex-start;
+  flex-direction: column;
+  gap: 6px;
+ }
+
+ .curriculum-section-summary span,
+ .curriculum-lesson-list time {
+  flex: initial;
+ }
+}

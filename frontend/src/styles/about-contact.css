@@ -1,0 +1,97 @@
+/* Praksha Academy — About & Contact shared animations
+   Import once, e.g. in About.jsx / Contact.jsx */
+
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Inter:wght@400;500;600&display=swap");
+
+@keyframes pa-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pa-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.pa-fade-up {
+  animation: pa-fade-up 0.6s ease forwards;
+}
+
+.pa-fade-in {
+  animation: pa-fade-in 0.6s ease forwards;
+}
+
+.pa-delay-1 { animation-delay: 0.1s; opacity: 0; }
+.pa-delay-2 { animation-delay: 0.2s; opacity: 0; }
+.pa-delay-3 { animation-delay: 0.3s; opacity: 0; }
+.pa-delay-4 { animation-delay: 0.4s; opacity: 0; }
+
+/* Card hover lift — used across About/Contact cards */
+.pa-hover-card {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.pa-hover-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 12px 24px rgba(30, 41, 59, 0.08);
+}
+
+/* Image scale-on-hover — used by ImagePlaceholder when a real photo is set */
+.pa-image-hover {
+  transition: transform 0.4s ease;
+  overflow: hidden;
+}
+.pa-image-hover:hover {
+  transform: scale(1.02);
+}
+
+/* Timeline connector line */
+.pa-timeline-line {
+  position: absolute;
+  left: 19px;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: #E2E8F0;
+}
+
+@media (max-width: 767px) {
+  .pa-timeline-line {
+    left: 15px;
+  }
+}
+
+/* Respect the user's OS-level reduced-motion preference: disable
+   animation/transition without hiding content (opacity stays at 1). */
+@media (prefers-reduced-motion: reduce) {
+  .pa-fade-up,
+  .pa-fade-in,
+  .pa-delay-1,
+  .pa-delay-2,
+  .pa-delay-3,
+  .pa-delay-4 {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  .pa-hover-card {
+    transition: none !important;
+  }
+
+  .pa-hover-card:hover {
+    transform: none !important;
+  }
+
+  .pa-image-hover {
+    transition: none !important;
+  }
+  .pa-image-hover:hover {
+    transform: none !important;
+  }
+}

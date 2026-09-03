@@ -1,0 +1,45 @@
+.course-faq-list {
+ border: 1px solid #e2e8f0;
+ border-radius: 8px;
+ overflow: hidden;
+}
+
+.course-faq-accordion.MuiAccordion-root {
+ border-bottom: 1px solid #e2e8f0;
+ box-shadow: none;
+}
+
+.course-faq-accordion.MuiAccordion-root:last-child {
+ border-bottom: 0;
+}
+
+.course-faq-accordion.MuiAccordion-root::before {
+ display: none;
+}
+
+.course-faq-accordion .MuiAccordionSummary-root {
+ min-height: 58px;
+ padding: 0 18px;
+ transition: background-color 0.3s ease;
+}
+
+.course-faq-accordion .MuiAccordionSummary-root:hover,
+.course-faq-accordion .MuiAccordionSummary-root.Mui-focusVisible {
+ background: #f8fafc;
+}
+
+.course-faq-accordion .MuiAccordionSummary-expandIconWrapper {
+ color: #2563eb;
+}
+
+.course-faq-accordion h3 {
+ margin: 0;
+ color: #1e293b;
+ font-size: 16px;
+ font-weight: 800;
+}
+
+.course-faq-accordion p {
+ color: #64748b;
+ line-height: 1.7;
+}

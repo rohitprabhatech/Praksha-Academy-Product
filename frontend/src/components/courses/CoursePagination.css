@@ -1,0 +1,32 @@
+.course-pagination-wrapper {
+ display: flex;
+ justify-content: center;
+ margin-top: 32px;
+}
+
+.course-pagination-wrapper .MuiPagination-ul {
+ justify-content: center;
+ gap: 4px;
+}
+
+.course-pagination-wrapper .MuiPaginationItem-root {
+ border-radius: 8px;
+ color: #1e293b;
+ font-family: inherit;
+ transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.course-pagination-wrapper .MuiPaginationItem-root.Mui-selected {
+ background: #2563eb;
+ color: #ffffff;
+}
+
+.course-pagination-wrapper .MuiPaginationItem-root.Mui-selected:hover {
+ background: #1d4ed8;
+}
+
+@media (max-width: 575.98px) {
+ .course-pagination-wrapper {
+  margin-top: 24px;
+ }
+}

@@ -1,0 +1,380 @@
+/* =========================================
+   NAVBAR
+========================================= */
+
+.navbar {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+
+  width: 100%;
+
+  background: #ffffff;
+
+  border-bottom: 1px solid #e5e7eb;
+
+  transition: box-shadow 0.2s ease;
+}
+
+.navbar--scrolled {
+  box-shadow: 0 2px 10px rgba(15, 23, 42, 0.08);
+}
+
+
+/* =========================================
+   NAVBAR INNER
+========================================= */
+
+.navbar-inner {
+  width: min(1180px, calc(100% - 40px));
+
+  height: 64px;
+
+  margin: 0 auto;
+
+  display: flex;
+  align-items: center;
+
+  gap: 24px;
+}
+
+
+/* =========================================
+   LOGO
+========================================= */
+
+.navbar-brand {
+  display: flex;
+  align-items: center;
+
+  gap: 8px;
+
+  flex-shrink: 0;
+
+  text-decoration: none;
+}
+
+.navbar-logo {
+  width: 34px;
+  height: 34px;
+
+  object-fit: contain;
+
+  display: block;
+}
+
+.navbar-brand span {
+  color: #111827;
+
+  font-size: 16px;
+  font-weight: 700;
+
+  letter-spacing: -0.02em;
+
+  white-space: nowrap;
+}
+
+
+/* =========================================
+   MENU
+========================================= */
+
+.navbar-menu {
+  display: flex;
+  align-items: center;
+
+  gap: 22px;
+
+  margin-right: auto;
+}
+
+.navbar-link {
+  position: relative;
+
+  display: flex;
+  align-items: center;
+
+  height: 64px;
+
+  padding: 0;
+
+  color: #374151;
+
+  font-size: 14px;
+  font-weight: 500;
+
+  text-decoration: none;
+
+  transition: color 0.15s ease;
+}
+
+.navbar-link:hover {
+  color: #2563eb;
+}
+
+.navbar-link--active {
+  color: #2563eb;
+
+  font-weight: 600;
+}
+
+.navbar-link--active::after {
+  content: "";
+
+  position: absolute;
+
+  left: 0;
+  right: 0;
+
+  bottom: 0;
+
+  height: 2px;
+
+  background: #2563eb;
+
+  border-radius: 2px;
+}
+
+
+/* =========================================
+   SEARCH
+========================================= */
+
+.navbar-search {
+  width: 205px;
+  height: 38px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 8px;
+
+  padding: 0 12px;
+
+  border: 1px solid #d1d5db;
+
+  border-radius: 8px;
+
+  background: #f8fafc;
+
+  color: #64748b;
+}
+
+.navbar-search input {
+  width: 100%;
+
+  font-size: 13px;
+
+  color: #111827;
+}
+
+.navbar-search input::placeholder {
+  color: #94a3b8;
+}
+
+
+/* =========================================
+   ACTIONS
+========================================= */
+
+.navbar-actions {
+  display: flex;
+  align-items: center;
+
+  gap: 8px;
+
+  flex-shrink: 0;
+}
+
+
+/* =========================================
+   BUTTONS
+========================================= */
+
+.navbar-actions .MuiButton-root {
+  min-width: auto;
+
+  height: 38px;
+
+  padding: 0 16px;
+
+  border-radius: 7px;
+
+  text-transform: none;
+
+  font-family: inherit;
+
+  font-size: 13px;
+
+  font-weight: 600;
+
+  box-shadow: none;
+}
+
+
+/* Login */
+
+.navbar-actions .MuiButton-outlined {
+  border-color: #2563eb;
+
+  color: #2563eb;
+
+  background: #ffffff;
+}
+
+.navbar-actions .MuiButton-outlined:hover {
+  background: #eff6ff;
+
+  border-color: #2563eb;
+}
+
+
+/* Register */
+
+.navbar-actions .MuiButton-contained {
+  background: #2563eb;
+
+  color: #ffffff;
+}
+
+.navbar-actions .MuiButton-contained:hover {
+  background: #1d4ed8;
+
+  box-shadow: 0 3px 8px rgba(37, 99, 235, 0.2);
+}
+
+
+/* =========================================
+   MOBILE TOGGLE
+========================================= */
+
+.navbar-toggle {
+  display: none !important;
+}
+
+
+/* =========================================
+   MOBILE MENU
+========================================= */
+
+.navbar-mobile {
+  display: none;
+}
+
+
+/* =========================================
+   TABLET
+========================================= */
+
+@media (max-width: 1050px) {
+
+  .navbar-inner {
+    width: calc(100% - 32px);
+
+    gap: 16px;
+  }
+
+  .navbar-menu {
+    gap: 16px;
+  }
+
+  .navbar-search {
+    width: 170px;
+  }
+
+}
+
+
+/* =========================================
+   MOBILE
+========================================= */
+
+@media (max-width: 900px) {
+
+  .navbar-inner {
+    height: 64px;
+  }
+
+  .navbar-menu,
+  .navbar-search,
+  .navbar-actions {
+    display: none;
+  }
+
+  .navbar-toggle {
+    display: inline-flex !important;
+
+    margin-left: auto;
+  }
+
+
+  .navbar-mobile {
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 16px;
+
+    max-height: 0;
+
+    overflow: hidden;
+
+    padding: 0 20px;
+
+    border-top: 1px solid transparent;
+
+    background: #ffffff;
+
+    transition:
+      max-height 0.25s ease,
+      padding 0.25s ease;
+  }
+
+  .navbar-mobile--open {
+    max-height: 500px;
+
+    padding: 16px 20px 20px;
+
+    border-top-color: #e5e7eb;
+  }
+
+
+  .navbar-search--mobile {
+    display: flex;
+
+    width: 100%;
+
+    height: 42px;
+  }
+
+
+  .navbar-mobile-menu {
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 0;
+  }
+
+  .navbar-mobile-menu .navbar-link {
+    height: auto;
+
+    padding: 12px 0;
+
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+  .navbar-mobile-menu .navbar-link--active::after {
+    display: none;
+  }
+
+
+  .navbar-mobile-actions {
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 8px;
+  }
+
+}
