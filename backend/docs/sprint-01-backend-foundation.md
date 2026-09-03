@@ -1,7 +1,7 @@
 # Sprint 01 — Backend Foundation
 
 **Branch:** `feature/sprint-01-backend-foundation`  
-**Status:** Implemented — awaiting Team Lead review before Sprint 02
+**Status:** Complete — awaiting Team Lead approval for Sprint 02
 
 ## Goal
 

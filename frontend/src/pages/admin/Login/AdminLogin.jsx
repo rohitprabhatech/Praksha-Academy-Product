@@ -88,21 +88,20 @@ function AdminLogin() {
     setIsSubmitting(true)
 
     try {
+      // Owner portal: accept frontend `admin` alias and backend `owner`.
       const result = await login({
         email: normalizedEmail,
         password: trimmedPassword,
         rememberMe,
-        allowedRole: 'admin',
+        allowedRoles: ['admin', 'owner'],
       })
 
-      console.log('ADMIN LOGIN RESULT:', result)
-
-      if (!result.success || result.user?.role !== 'admin') {
+      if (!result.success) {
         showError()
         return
       }
 
-      navigate('/admin/dashboard', {
+      navigate(result.redirectTo || '/admin/dashboard', {
         replace: true,
       })
     } catch (loginError) {

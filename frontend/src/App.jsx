@@ -6,9 +6,9 @@ import AppRoutes from './routes/AppRoutes'
 import getTheme from './constants/theme'
 import { ThemeModeProvider, useThemeMode } from './context/ThemeModeContext'
 import { AuthProvider } from './context/AuthContext'
+import { WebsiteProvider } from './context/WebsiteContext'
 
 import 'bootstrap/dist/css/bootstrap.min.css'
-import 'react-toastify/dist/ReactToastify.css'
 import './App.css'
 import './index.css'
 
@@ -21,7 +21,9 @@ function ThemedApp() {
       <CssBaseline />
 
       <BrowserRouter>
-        <AppRoutes />
+        <WebsiteProvider>
+          <AppRoutes />
+        </WebsiteProvider>
 
         <ToastContainer
           position="top-right"
@@ -29,22 +31,14 @@ function ThemedApp() {
           hideProgressBar={false}
           newestOnTop
           closeOnClick
+          pauseOnFocusLoss
+          draggable
           pauseOnHover
+          theme={mode}
           toastClassName="premium-toast"
           bodyClassName="premium-toast-body"
         />
       </BrowserRouter>
-      <ToastContainer
-        position="top-right"
-        autoClose={3500}
-        hideProgressBar={false}
-        newestOnTop
-        closeOnClick
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-        theme={mode}
-      />
     </ThemeProvider>
   )
 }

@@ -12,15 +12,16 @@ Do **not** document backend authentication, JWT, sessions, or password hashing.
 
 | Screen | Route | Status |
 | --- | --- | --- |
-| Student/public Login | `/login` | Partial — UI done, no session |
-| Admin Login | `/admin/login` | Partial — always navigates to dashboard |
-| Register | `/register` | Partial |
-| Forgot Password | `/forgot-password` | Partial |
-| Verify OTP | `/verify-otp` | Partial |
-| Reset Password | `/reset-password` | Not started |
+| Student/public Login | `/login` | Done — mock auth + role redirect (student/teacher) |
+| Admin Login | `/admin/login` | Done — owner/admin guarded |
+| Register | `/register` | Partial — UI; API in Sprint 03 |
+| Forgot Password | `/forgot-password` | Partial — UI; API in Sprint 03 |
+| Verify OTP | `/verify-otp` | Partial — UI |
+| Reset Password | `/reset-password` | Done — route wired |
 | Change Password | Per-role settings or `/change-password` | Not started |
-| Unauthorized | `/unauthorized` | Not started |
-| Access Denied | `/access-denied` | Not started |
+| Unauthorized | `/unauthorized` | Done |
+| Access Denied | `/access-denied` | Done — route wired |
+| Route guards | student / teacher / admin | Done |
 
 Teachers use `/login` with role redirect (**Q-03**, **teacher login route is optional**).
 

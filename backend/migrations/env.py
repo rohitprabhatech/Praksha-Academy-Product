@@ -1,7 +1,6 @@
 """Alembic migration environment.
 
-Sprint 01: wiring only. Initial schema migration lands in Sprint 02
-from database/schema.sql + SQLAlchemy models.
+Sprint 02: models imported so Base.metadata matches database/schema.sql.
 """
 
 from logging.config import fileConfig
@@ -12,8 +11,8 @@ from sqlalchemy import engine_from_config, pool
 from app.core.config import get_settings
 from app.core.database import Base
 
-# Import models here in Sprint 02 so metadata is complete:
-# from app.models import ...  # noqa: F401
+# Ensure all models are registered on Base.metadata
+import app.models  # noqa: F401
 
 config = context.config
 
@@ -21,16 +20,18 @@ if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
 target_metadata = Base.metadata
-
 settings = get_settings()
-config.set_main_option("sqlalchemy.url", settings.database_url)
+
+
+def get_url() -> str:
+    """Database URL from app settings (avoids ConfigParser % interpolation issues)."""
+    return settings.database_url
 
 
 def run_migrations_offline() -> None:
     """Run migrations in 'offline' mode."""
-    url = config.get_main_option("sqlalchemy.url")
     context.configure(
-        url=url,
+        url=get_url(),
         target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
@@ -43,8 +44,10 @@ def run_migrations_offline() -> None:
 
 def run_migrations_online() -> None:
     """Run migrations in 'online' mode."""
+    configuration = config.get_section(config.config_ini_section) or {}
+    configuration["sqlalchemy.url"] = get_url()
     connectable = engine_from_config(
-        config.get_section(config.config_ini_section, {}),
+        configuration,
         prefix="sqlalchemy.",
         poolclass=pool.NullPool,
     )

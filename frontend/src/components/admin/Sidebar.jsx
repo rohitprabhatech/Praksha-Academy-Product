@@ -27,20 +27,15 @@ function SidebarContent({ onClose, showCloseButton = false }) {
   const navigate = useNavigate()
   const { logout } = useAuth()
 
-  const handleLogout = () => {
-    // Clear authentication from both localStorage and sessionStorage
-    logout()
+  const handleLogout = async () => {
+    await logout()
 
-    // Close mobile drawer if open
     if (onClose) {
       onClose()
     }
 
-    // Show confirmation
     toast.success('Logged out successfully')
-
-    // Go to admin login
-    navigate('/admin/login', { replace: true })
+    navigate('/login', { replace: true })
   }
 
   return (

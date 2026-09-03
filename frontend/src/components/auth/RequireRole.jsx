@@ -1,22 +1,19 @@
-import { Navigate, Outlet } from "react-router-dom";
-import { useAuth } from "../../context/AuthContext";
+import { Navigate, Outlet } from 'react-router-dom'
+import { useAuth } from '../../context/AuthContext'
+import { roleMatchesAllowed } from '../../constants/roles'
 
-const RequireRole = ({ allowedRoles }) => {
-  const { isAuthenticated, role } = useAuth();
+const RequireRole = ({ allowedRoles, loginPath = '/login' }) => {
+  const { isAuthenticated, role } = useAuth()
 
   if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to={loginPath} replace />
   }
 
-  const roles = Array.isArray(allowedRoles)
-    ? allowedRoles
-    : [allowedRoles];
-
-  if (!roles.includes(role)) {
-    return <Navigate to="/access-denied" replace />;
+  if (!roleMatchesAllowed(role, allowedRoles)) {
+    return <Navigate to="/access-denied" replace />
   }
 
-  return <Outlet />;
-};
+  return <Outlet />
+}
 
-export default RequireRole;
+export default RequireRole

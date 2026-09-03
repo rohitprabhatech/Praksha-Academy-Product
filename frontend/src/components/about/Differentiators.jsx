@@ -1,23 +1,31 @@
 import { Box, Typography } from "@mui/material";
 import { colors } from "../../theme/theme";
 import aboutData from "../../data/aboutData";
+import { useWebsite } from "../../context/WebsiteContext";
 
 /**
- * "What Makes Us Different" — editorial list, not identical feature cards.
- * Each item explains a teaching principle in plain language.
+ * "What Makes Us Different" — prefers tenant website CMS content.
  */
 const Differentiators = () => {
+  const { content } = useWebsite();
+  const differentiators =
+    content?.about?.differentiators?.length
+      ? content.about.differentiators
+      : aboutData.differentiators;
+
   return (
     <Box>
-      {aboutData.differentiators.map((item, index) => (
+      {differentiators.map((item, index) => (
         <Box
-          key={item.title}
+          key={item.id || item.title}
           sx={{
             display: "flex",
             gap: { xs: 2.5, md: 4 },
             py: 3.5,
             borderBottom:
-              index === aboutData.differentiators.length - 1 ? "none" : `1px solid ${colors.borderColor}`,
+              index === differentiators.length - 1
+                ? "none"
+                : `1px solid ${colors.borderColor}`,
           }}
         >
           <Typography
@@ -36,7 +44,10 @@ const Differentiators = () => {
             <Typography variant="h6" sx={{ color: colors.textPrimary, mb: 1 }}>
               {item.title}
             </Typography>
-            <Typography variant="body1" sx={{ color: colors.textSecondary, lineHeight: 1.75, maxWidth: 640 }}>
+            <Typography
+              variant="body1"
+              sx={{ color: colors.textSecondary, lineHeight: 1.75, maxWidth: 640 }}
+            >
               {item.description}
             </Typography>
           </Box>

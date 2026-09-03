@@ -1,142 +1,137 @@
-import { createContext, useContext, useMemo, useState } from "react";
+import { createContext, useCallback, useContext, useMemo, useState } from 'react'
+import { AUTH_STORAGE_KEY } from '../services/httpClient'
+import {
+  loginRequest,
+  logoutRequest,
+} from '../services/authService'
+import {
+  getDashboardPathForRole,
+  normalizeRole,
+  roleMatchesAllowed,
+} from '../constants/roles'
 
-const AuthContext = createContext(null);
-
-const AUTH_STORAGE_KEY = "praksha_auth";
-
-const MOCK_USERS = [
-  {
-    email: "student@praksha.com",
-    password: "student123",
-    role: "student",
-    name: "Student User",
-  },
-  {
-    email: "teacher@praksha.com",
-    password: "teacher123",
-    role: "teacher",
-    name: "Teacher User",
-  },
-  {
-    email: "admin@praksha.academy",
-    password: "admin123",
-    role: "admin",
-    name: "Admin",
-  },
-];
+const AuthContext = createContext(null)
 
 const getStoredAuth = () => {
   try {
-    const rememberedUser = localStorage.getItem(AUTH_STORAGE_KEY);
+    const rememberedUser = localStorage.getItem(AUTH_STORAGE_KEY)
+    if (rememberedUser) return JSON.parse(rememberedUser)
 
-    if (rememberedUser) {
-      return JSON.parse(rememberedUser);
-    }
+    const sessionUser = sessionStorage.getItem(AUTH_STORAGE_KEY)
+    if (sessionUser) return JSON.parse(sessionUser)
 
-    const sessionUser = sessionStorage.getItem(AUTH_STORAGE_KEY);
-
-    if (sessionUser) {
-      return JSON.parse(sessionUser);
-    }
-
-    return null;
+    return null
   } catch {
-    return null;
+    return null
   }
-};
+}
+
+const persistAuth = (authPayload, rememberMe) => {
+  const serialized = JSON.stringify(authPayload)
+  if (rememberMe) {
+    localStorage.setItem(AUTH_STORAGE_KEY, serialized)
+    sessionStorage.removeItem(AUTH_STORAGE_KEY)
+  } else {
+    sessionStorage.setItem(AUTH_STORAGE_KEY, serialized)
+    localStorage.removeItem(AUTH_STORAGE_KEY)
+  }
+}
+
+const clearPersistedAuth = () => {
+  localStorage.removeItem(AUTH_STORAGE_KEY)
+  sessionStorage.removeItem(AUTH_STORAGE_KEY)
+}
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(getStoredAuth);
+  const [auth, setAuth] = useState(getStoredAuth)
 
-  const login = async ({
-    email,
-    password,
-    rememberMe = false,
-    allowedRole = null,
-  }) => {
-    const normalizedEmail = email.trim().toLowerCase();
+  const login = useCallback(
+    async ({
+      email,
+      password,
+      rememberMe = false,
+      allowedRole = null,
+      allowedRoles = null,
+    }) => {
+      const result = await loginRequest({ email, password })
 
-    const matchedUser = MOCK_USERS.find(
-      (mockUser) =>
-        mockUser.email === normalizedEmail &&
-        mockUser.password === password
-    );
+      if (!result.success || !result.user) {
+        return {
+          success: false,
+          message: result.message || 'Invalid email or password.',
+        }
+      }
 
-    // Invalid email/password
-    if (!matchedUser) {
+      const role = normalizeRole(result.user.role)
+      const rolesGate = allowedRoles ?? (allowedRole ? [allowedRole] : null)
+
+      if (!roleMatchesAllowed(role, rolesGate)) {
+        return {
+          success: false,
+          message: 'Invalid email or password.',
+        }
+      }
+
+      const authenticated = {
+        id: result.user.id,
+        name: result.user.name,
+        email: result.user.email,
+        role,
+        tenantId: result.user.tenantId ?? null,
+        accessToken: result.accessToken ?? null,
+        refreshToken: result.refreshToken ?? null,
+      }
+
+      setAuth(authenticated)
+      persistAuth(authenticated, rememberMe)
+
       return {
-        success: false,
-        message: "Invalid email or password.",
-      };
+        success: true,
+        user: authenticated,
+        redirectTo: getDashboardPathForRole(role),
+      }
+    },
+    []
+  )
+
+  const logout = useCallback(async () => {
+    try {
+      await logoutRequest()
+    } finally {
+      setAuth(null)
+      clearPersistedAuth()
     }
-
-    // Role restriction
-    // Example:
-    // normal login -> student only
-    // admin login  -> admin only
-    if (allowedRole && matchedUser.role !== allowedRole) {
-      return {
-        success: false,
-        message: "Invalid email or password.",
-      };
-    }
-
-    const authenticatedUser = {
-      name: matchedUser.name,
-      email: matchedUser.email,
-      role: matchedUser.role,
-    };
-
-    setUser(authenticatedUser);
-
-    const serializedUser = JSON.stringify(authenticatedUser);
-
-    if (rememberMe) {
-      localStorage.setItem(AUTH_STORAGE_KEY, serializedUser);
-      sessionStorage.removeItem(AUTH_STORAGE_KEY);
-    } else {
-      sessionStorage.setItem(AUTH_STORAGE_KEY, serializedUser);
-      localStorage.removeItem(AUTH_STORAGE_KEY);
-    }
-
-    return {
-      success: true,
-      user: authenticatedUser,
-    };
-  };
-
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem(AUTH_STORAGE_KEY);
-    sessionStorage.removeItem(AUTH_STORAGE_KEY);
-  };
+  }, [])
 
   const value = useMemo(
     () => ({
-      user,
-      isAuthenticated: Boolean(user),
-      role: user?.role ?? null,
+      user: auth,
+      isAuthenticated: Boolean(auth?.email && auth?.role),
+      role: auth?.role ?? null,
+      tenantId: auth?.tenantId ?? null,
+      accessToken: auth?.accessToken ?? null,
       login,
       logout,
+      getDashboardPath: () => getDashboardPathForRole(auth?.role),
     }),
-    [user]
-  );
+    [auth, login, logout]
+  )
 
   return (
     <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
-  );
-};
+  )
+}
 
 export const useAuth = () => {
-  const context = useContext(AuthContext);
+  const context = useContext(AuthContext)
 
   if (!context) {
-    throw new Error("useAuth must be used inside an AuthProvider");
+    throw new Error('useAuth must be used inside an AuthProvider')
   }
 
-  return context;
-};
+  return context
+}
 
-export default AuthContext;
+export default AuthContext

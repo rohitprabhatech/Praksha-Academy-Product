@@ -17,25 +17,21 @@ import CTASection from "../components/about/CTASection";
 import FloatingContact from "../components/common/FloatingContact";
 import SectionHeading from "../components/common/SectionHeading";
 import aboutData from "../data/aboutData";
+import { useWebsite } from "../context/WebsiteContext";
 import { colors } from "../theme/theme";
 import "../styles/about-contact.css";
 
 /**
- * About page. Sections that depend on unconfirmed data (Statistics,
- * AcademyTimeline, Recognition) hide themselves automatically when their
- * backing data in aboutData.js is empty — no placeholder/fake content
- * ever reaches the page.
+ * About page. Sections that depend on unconfirmed data hide when empty.
+ * Story/differentiators prefer tenant website CMS content.
  */
 const About = () => {
+  const { content, branding } = useWebsite();
   const hasTimeline = aboutData.timeline.length > 0;
   const hasRecognition = aboutData.recognition.length > 0;
+  const academyName = branding?.academyName || "our academy";
 
   return (
-    // TODO(SEO): set document title/meta description for this route.
-    // React 19 supports rendering <title>/<meta> directly in JSX; on older
-    // React versions use the project's existing helmet/head solution
-    // instead — check how Home/Courses currently set their <title> and
-    // match that pattern here rather than introducing a new one.
     <Box sx={{ backgroundColor: colors.pageBackground, position: "relative" }}>
       <AboutHero />
       <TrustStrip />
@@ -50,7 +46,10 @@ const About = () => {
       {/* What Makes Us Different */}
       <Box component="section" sx={{ py: { xs: 7, md: 10 }, backgroundColor: colors.sectionBackground }}>
         <div className="container">
-          <SectionHeading eyebrow="How We Work" title="What Makes Praksha Academy Different" />
+          <SectionHeading
+            eyebrow="How We Work"
+            title={content?.about?.title || `What Makes ${academyName} Different`}
+          />
           <div className="row justify-content-center">
             <div className="col-lg-9">
               <Differentiators />

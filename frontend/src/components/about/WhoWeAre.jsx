@@ -3,17 +3,16 @@ import { colors } from "../../theme/theme";
 import aboutData from "../../data/aboutData";
 import mediaData from "../../data/mediaData";
 import ImagePlaceholder from "../common/ImagePlaceholder";
+import { useWebsite } from "../../context/WebsiteContext";
 
 /**
- * Editorial "Who We Are" section — replaces the previous fabricated
- * founder-quote block. Copy comes from aboutData.whoWeAre and is clearly
- * marked as placeholder text to be replaced with the real story. A large
- * image now anchors the left column per the design brief's "editorial
- * image + text" layout — degrades to a placeholder until a real photo is
- * set in mediaData.js.
+ * Editorial "Who We Are" section.
+ * Prefers tenant website CMS content when published.
  */
 const WhoWeAre = () => {
-  const { story, belief, approach } = aboutData.whoWeAre;
+  const { content } = useWebsite();
+  const whoWeAre = content?.about?.whoWeAre || aboutData.whoWeAre;
+  const { story, belief, approach } = whoWeAre;
 
   return (
     <div className="row g-5 align-items-center">

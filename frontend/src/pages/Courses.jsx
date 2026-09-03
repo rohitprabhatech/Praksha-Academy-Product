@@ -6,6 +6,7 @@ import CourseGrid from '../components/courses/CourseGrid'
 import CoursePagination from '../components/courses/CoursePagination'
 import SortSelect from '../components/courses/SortSelect'
 import courses from '../data/courses'
+import { useWebsite } from '../context/WebsiteContext'
 import './Courses.css'
 
 const coursesPerPage = 6
@@ -61,6 +62,9 @@ function getSortedCourses(courseList, selectedSort) {
 function Courses() {
  // 2. Initialize the search params hook
  const [searchParams, setSearchParams] = useSearchParams()
+ const { content, branding } = useWebsite()
+ const coursesPage = content?.coursesPage
+ const academyName = branding?.academyName || 'Academy'
  
  // 3. Grab the initial value from the URL (e.g., ?q=python)
  const initialQuery = searchParams.get('q') || ''
@@ -148,12 +152,13 @@ function Courses() {
    <section className="courses-hero">
     <div className="container">
      <div className="courses-hero-content">
-      <span className="courses-eyebrow">PRAKSHA ACADEMY</span>
+      <span className="courses-eyebrow">{(academyName || 'ACADEMY').toUpperCase()}</span>
 
-      <h1>Explore Courses</h1>
+      <h1>{coursesPage?.title || 'Explore Courses'}</h1>
 
       <p>
-       Learn new skills, strengthen your knowledge, and build your future with courses designed for every learner.
+       {coursesPage?.subtitle ||
+         'Learn new skills, strengthen your knowledge, and build your future with courses designed for every learner.'}
       </p>
 
       <div className="courses-search-wrapper">

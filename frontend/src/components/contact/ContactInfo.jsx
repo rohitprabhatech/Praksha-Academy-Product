@@ -2,6 +2,7 @@ import { Box, Typography, Stack, IconButton } from "@mui/material";
 import { FaMapMarkerAlt, FaPhoneAlt, FaEnvelope, FaInstagram, FaFacebookF, FaLinkedinIn, FaYoutube } from "react-icons/fa";
 import { colors } from "../../theme/theme";
 import contactData from "../../data/contactData";
+import { useWebsite } from "../../context/WebsiteContext";
 
 const socialIcons = {
   instagram: FaInstagram,
@@ -11,12 +12,25 @@ const socialIcons = {
 };
 
 /**
- * Reads every value from src/data/contactData.js. Any channel left null
- * there is simply not rendered — no placeholder numbers or addresses ever
- * appear on screen.
+ * Contact details prefer tenant website CMS values, then contactData.js.
  */
 const ContactInfo = () => {
-  const { address, hasPhysicalAddress, phone, email, socialLinks } = contactData;
+  const { content } = useWebsite();
+  const siteContact = content?.contact || {};
+  const siteSocials = content?.footer?.socialLinks || {};
+
+  const address = siteContact.address || contactData.address;
+  const phone = siteContact.phone || contactData.phone;
+  const email = siteContact.email || contactData.email;
+  const hasPhysicalAddress =
+    Boolean(address) || contactData.hasPhysicalAddress;
+
+  const socialLinks = {
+    ...contactData.socialLinks,
+    ...Object.fromEntries(
+      Object.entries(siteSocials).map(([key, value]) => [key, value || null])
+    ),
+  };
 
   const infoItems = [
     hasPhysicalAddress && address && { icon: <FaMapMarkerAlt />, label: "Visit Us", value: address },

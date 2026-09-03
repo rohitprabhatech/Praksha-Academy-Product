@@ -11,6 +11,7 @@ import { FiChevronDown, FiLogOut, FiX } from 'react-icons/fi'
 import { toast } from 'react-toastify'
 import { adminNavGroups } from '../../constants/adminDashboard'
 import praksaMark from '../../assets/praksha-mark.png'
+import { useAuth } from '../../context/AuthContext'
 
 export const ADMIN_SIDEBAR_WIDTH = 258
 
@@ -136,10 +137,12 @@ function NavItem({ item, pathname, onNavigate }) {
 function SidebarContent({ onClose, showCloseButton = false }) {
   const { pathname } = useLocation()
   const navigate = useNavigate()
+  const { logout } = useAuth()
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await logout()
     toast.success('Logged out successfully')
-    navigate('/admin/login')
+    navigate('/login', { replace: true })
   }
 
   return (

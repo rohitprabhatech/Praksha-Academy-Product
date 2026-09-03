@@ -88,7 +88,7 @@ function ProfileMenu() {
      Settings
     </MenuItem>
     <Divider />
-    <MenuItem onClick={() => goTo('/admin/login')} sx={{ color: 'error.main' }}>
+    <MenuItem onClick={() => goTo('/login')} sx={{ color: 'error.main' }}>
      <ListItemIcon sx={{ color: 'error.main' }}>
       <FiLogOut size={18} />
      </ListItemIcon>

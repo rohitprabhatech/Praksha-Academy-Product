@@ -13,20 +13,18 @@ import ContactCTA from "../components/contact/ContactCTA";
 import FloatingContact from "../components/common/FloatingContact";
 import SectionHeading from "../components/common/SectionHeading";
 import contactData from "../data/contactData";
+import { useWebsite } from "../context/WebsiteContext";
 import { colors } from "../theme/theme";
 import "../styles/about-contact.css";
 
 /**
- * Contact page. Branch/Map sections render only when
- * contactData.hasPhysicalAddress is true; otherwise OnlineSupport shows a
- * location-independent message. Nothing here fabricates an address, phone
- * number, or working hours — see src/data/contactData.js to fill in real
- * values as they're confirmed.
+ * Contact page. Prefers tenant website CMS for titles and details.
  */
 const Contact = () => {
+  const { content } = useWebsite();
+  const contact = content?.contact;
+
   return (
-    // TODO(SEO): set document title/meta description for this route,
-    // matching whatever pattern Home/Courses already use.
     <Box sx={{ backgroundColor: colors.pageBackground, position: "relative" }}>
       {/* Hero */}
       <Box
@@ -37,11 +35,11 @@ const Contact = () => {
             Get In Touch
           </Typography>
           <Typography variant="h1" sx={{ mt: 1, fontSize: { xs: "1.9rem", md: "2.5rem" } }}>
-            Let's talk about your learning journey.
+            {contact?.title || "Let's talk about your learning journey."}
           </Typography>
           <Typography variant="body1" sx={{ color: "rgba(255,255,255,0.85)", mt: 1.5, maxWidth: 560, mx: "auto" }}>
-            Questions about a course, admissions, or anything else — reach us
-            using whichever option works best for you.
+            {contact?.subtitle ||
+              "Questions about a course, admissions, or anything else — reach us using whichever option works best for you."}
           </Typography>
         </div>
       </Box>

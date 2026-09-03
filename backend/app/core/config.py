@@ -2,8 +2,9 @@
 
 from functools import lru_cache
 from typing import List
+from urllib.parse import quote_plus
 
-from pydantic import Field, field_validator
+from pydantic import Field, computed_field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -25,11 +26,9 @@ class Settings(BaseSettings):
     host: str = "0.0.0.0"
     port: int = 8000
 
-    cors_origins: List[str] = Field(
-        default_factory=lambda: [
-            "http://localhost:5173",
-            "http://127.0.0.1:5173",
-        ]
+    # Comma-separated origins in .env, e.g. http://localhost:5173,http://127.0.0.1:5173
+    cors_origins: str = Field(
+        default="http://localhost:5173,http://127.0.0.1:5173"
     )
 
     db_host: str = "127.0.0.1"
@@ -45,19 +44,18 @@ class Settings(BaseSettings):
 
     bcrypt_rounds: int = 12
 
-    @field_validator("cors_origins", mode="before")
-    @classmethod
-    def parse_cors_origins(cls, value: object) -> object:
-        if isinstance(value, str):
-            items = [item.strip() for item in value.split(",") if item.strip()]
-            return items
-        return value
+    @computed_field  # type: ignore[prop-decorator]
+    @property
+    def cors_origin_list(self) -> List[str]:
+        return [item.strip() for item in self.cors_origins.split(",") if item.strip()]
 
     @property
     def database_url(self) -> str:
         """SQLAlchemy MySQL connection URL (PyMySQL driver)."""
+        password = quote_plus(self.db_password)
+        user = quote_plus(self.db_user)
         return (
-            f"mysql+pymysql://{self.db_user}:{self.db_password}"
+            f"mysql+pymysql://{user}:{password}"
             f"@{self.db_host}:{self.db_port}/{self.db_name}"
             "?charset=utf8mb4"
         )

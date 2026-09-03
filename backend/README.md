@@ -4,7 +4,7 @@ Multi-tenant education SaaS API for **Praksha Academy** (Prabha Technology).
 
 ## Stack
 
-- Python 3.11+
+- **Python 3.11 or 3.12** (recommended; avoid 3.14 until wheels are available)
 - FastAPI
 - SQLAlchemy 2.x
 - MySQL 8.0+
@@ -16,8 +16,8 @@ Multi-tenant education SaaS API for **Praksha Academy** (Prabha Technology).
 
 | Sprint | Scope | Status |
 |---|---|---|
-| 01 | Backend foundation | **In progress / this branch** |
-| 02 | Database models + Alembic initial schema | Not started |
+| 01 | Backend foundation | Complete |
+| 02 | Database models + Alembic baseline | Complete (see `docs/sprint-02-database.md`) |
 | 03 | Authentication | Not started |
 
 Existing design source of truth: `database/schema.sql` and `docs/database/`.
@@ -47,6 +47,9 @@ backend/
 
 ```bash
 cd backend
+
+# Prefer Python 3.11 on this machine:
+#   py -3.11 -m venv .venv
 python -m venv .venv
 
 # Windows PowerShell

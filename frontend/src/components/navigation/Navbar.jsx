@@ -2,17 +2,26 @@ import { useEffect, useState } from 'react'
 import { Link, NavLink, useNavigate } from 'react-router-dom'
 import { Button, IconButton, InputBase } from '@mui/material'
 import { FiSearch, FiMenu, FiX, FiSun, FiMoon } from 'react-icons/fi'
-import { navItems } from '../../constants/siteData'
+import { navItems as fallbackNav } from '../../constants/siteData'
 import { useThemeMode } from '../../context/ThemeModeContext'
+import { useWebsite } from '../../context/WebsiteContext'
 import logoMark from '../../assets/praksha-mark.png'
 import './Navbar.css'
 
 function Navbar() {
   const [scrolled, setScrolled] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
-  const [searchQuery, setSearchQuery] = useState('') // Added state for search
+  const [searchQuery, setSearchQuery] = useState('')
   const { mode, toggleMode } = useThemeMode()
-  const navigate = useNavigate() // Added navigation hook
+  const navigate = useNavigate()
+  const { branding, navItems, loading } = useWebsite()
+
+  const items = (!loading && navItems?.length ? navItems : fallbackNav).map((item) => ({
+    label: item.label,
+    path: item.path,
+  }))
+  const academyName = branding?.academyName || 'Praksha Academy'
+  const logoSrc = branding?.logoUrl || logoMark
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 8)
@@ -27,7 +36,6 @@ function Navbar() {
     }
   }, [mobileOpen])
 
-  // Added Search Handler
   const handleSearch = (e) => {
     e.preventDefault()
     const trimmedQuery = searchQuery.trim()
@@ -36,19 +44,19 @@ function Navbar() {
     } else {
       navigate(`/courses`)
     }
-    setMobileOpen(false) // Close mobile menu if searching from there
+    setMobileOpen(false)
   }
 
   return (
     <header className={`navbar${scrolled ? ' navbar--scrolled' : ''}`}>
       <div className="section-wrapper navbar-inner">
         <Link to="/" className="navbar-brand" onClick={() => setMobileOpen(false)}>
-          <img src={logoMark} alt="Praksha Academy" className="navbar-logo" />
-          <span>Praksha Academy</span>
+          <img src={logoSrc} alt={academyName} className="navbar-logo" />
+          <span>{academyName}</span>
         </Link>
 
         <nav className="navbar-menu" aria-label="Primary navigation">
-          {navItems.map((item) => (
+          {items.map((item) => (
             <NavLink
               key={item.path}
               to={item.path}
@@ -59,19 +67,18 @@ function Navbar() {
           ))}
         </nav>
 
-        {/* Changed to <form> to handle Enter key presses */}
         <form className="navbar-search" onSubmit={handleSearch}>
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             aria-label="Submit search"
             style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', display: 'flex' }}
           >
             <FiSearch size={16} aria-hidden="true" color="#64748b" />
           </button>
-          <InputBase 
-            placeholder="Search courses..." 
-            aria-label="Search courses" 
-            fullWidth 
+          <InputBase
+            placeholder="Search courses..."
+            aria-label="Search courses"
+            fullWidth
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
@@ -104,27 +111,25 @@ function Navbar() {
       </div>
 
       <div className={`navbar-mobile${mobileOpen ? ' navbar-mobile--open' : ''}`}>
-        
-        {/* Changed to <form> for mobile as well */}
         <form className="navbar-search navbar-search--mobile" onSubmit={handleSearch}>
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             aria-label="Submit search"
             style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', display: 'flex' }}
           >
             <FiSearch size={16} aria-hidden="true" color="#64748b" />
           </button>
-          <InputBase 
-            placeholder="Search courses..." 
-            aria-label="Search courses" 
-            fullWidth 
+          <InputBase
+            placeholder="Search courses..."
+            aria-label="Search courses"
+            fullWidth
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </form>
 
         <nav className="navbar-mobile-menu" aria-label="Mobile navigation">
-          {navItems.map((item) => (
+          {items.map((item) => (
             <NavLink
               key={item.path}
               to={item.path}

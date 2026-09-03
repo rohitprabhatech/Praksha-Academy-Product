@@ -280,30 +280,19 @@ const LoginForm = () => {
     setLoginError('');
 
     try {
+      // Unified login — all roles use the same page; redirect by role.
       const result = await login({
         email: formData.email,
         password: formData.password,
         rememberMe: formData.rememberMe,
-        allowedRole: 'student',
       });
 
-      console.log('LOGIN RESULT:', result);
-
-      /* Wrong credentials */
       if (!result.success) {
         showLoginError();
         return;
       }
 
-      /* Successful login */
-      const roleRoutes = {
-        student: '/student/dashboard',
-        teacher: '/teacher/dashboard',
-        admin: '/admin/dashboard',
-      };
-
-      const destination =
-        roleRoutes[result.user.role] || '/';
+      const destination = result.redirectTo || '/unauthorized';
 
       navigate(destination, {
         replace: true,

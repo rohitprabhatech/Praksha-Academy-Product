@@ -12,6 +12,7 @@ import {
 } from 'react-icons/fi'
 import courses from '../data/courses'
 import { testimonialData } from '../constants/siteData'
+import { useWebsite } from '../context/WebsiteContext'
 import './Home.css'
 import heroLearning from '../assets/hero-learning.jpg'
 
@@ -100,6 +101,9 @@ function getDailyQuote() {
 function Home() {
   const trendingTrackRef = useRef(null)
   const dailyQuote = getDailyQuote()
+  const { content, branding } = useWebsite()
+  const home = content?.home
+  const academyName = branding?.academyName || 'Praksha Academy'
 
   const scrollTrendingCourses = (direction) => {
     const track = trendingTrackRef.current
@@ -119,18 +123,24 @@ function Home() {
           <div className="home-hero-content">
 
             <span className="home-hero-eyebrow">
-              PRACTICAL TECHNOLOGY LEARNING
+              {(home?.heroEyebrow || 'PRACTICAL TECHNOLOGY LEARNING').toUpperCase()}
             </span>
 
             <h1>
-              Learn today.
-              <br />
-              Build <span>tomorrow.</span>
+              {home?.heroTitle ? (
+                home.heroTitle
+              ) : (
+                <>
+                  Learn today.
+                  <br />
+                  Build <span>tomorrow.</span>
+                </>
+              )}
             </h1>
 
             <p className="home-hero-description">
-              Practical courses, real projects and expert guidance
-              to help you build skills that shape your future.
+              {home?.heroSubtitle ||
+                'Practical courses, real projects and expert guidance to help you build skills that shape your future.'}
             </p>
 
             {/* SEARCH */}
@@ -159,15 +169,15 @@ function Home() {
 
             {/* ACTIONS */}
             <div className="home-hero-actions">
-              <a href="/courses" className="hero-primary-btn">
-                Explore Courses
+              <Link to={home?.heroCtaPath || '/courses'} className="hero-primary-btn">
+                {home?.heroCtaLabel || 'Explore Courses'}
                 <span>→</span>
-              </a>
+              </Link>
 
-              <a href="/programs" className="hero-secondary-btn">
-                View Learning Paths
+              <Link to={home?.secondaryCtaPath || '/programs'} className="hero-secondary-btn">
+                {home?.secondaryCtaLabel || 'View Learning Paths'}
                 <span>→</span>
-              </a>
+              </Link>
             </div>
 
           </div>
@@ -502,7 +512,7 @@ function Home() {
       <section className="home-section home-why-section">
         <div className="section-wrapper">
           <div className="home-why-header">
-            <span>Why Praksha Academy</span>
+            <span>Why {academyName}</span>
             <h2>More than courses. A better way to learn.</h2>
             <p>
               Learn through a structured experience designed to help you build real skills.
