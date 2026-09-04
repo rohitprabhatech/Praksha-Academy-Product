@@ -60,7 +60,7 @@ uvicorn app.main:app --reload
 | Sprint 04 | [SPRINT-04-PLATFORM-ADMIN.md](./SPRINT-04-PLATFORM-ADMIN.md) | `feature/sprint-04-platform-admin` | | ✅ Done (local) |
 | Sprint 05 | [SPRINT-05-TENANT-SETUP.md](./SPRINT-05-TENANT-SETUP.md) | `feature/sprint-05-tenant-setup` | | ✅ Done (local) |
 | Sprint 06 | [SPRINT-06-COURSES.md](./SPRINT-06-COURSES.md) | `feature/sprint-06-courses` | | ✅ Done (local) |
-| Sprint 07 | [SPRINT-07-LMS-ASSESSMENTS.md](./SPRINT-07-LMS-ASSESSMENTS.md) | `feature/sprint-07-lms-assessments` | | ⬜ Not Started |
+| Sprint 07 | [SPRINT-07-LMS-ASSESSMENTS.md](./SPRINT-07-LMS-ASSESSMENTS.md) | `feature/sprint-07-lms-assessments` | | ✅ Done (local) |
 | Sprint 08 | [SPRINT-08-FINANCE-CMS.md](./SPRINT-08-FINANCE-CMS.md) | `feature/sprint-08-finance-cms` | | ⬜ Not Started |
 
 ---

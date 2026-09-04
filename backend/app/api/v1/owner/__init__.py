@@ -7,6 +7,7 @@ from app.api.v1.owner import (
     classes,
     course_content,
     courses,
+    enrollments,
     profile,
     programs,
     students,
@@ -24,3 +25,4 @@ owner_router.include_router(batches.router)
 owner_router.include_router(programs.router)
 owner_router.include_router(courses.router)
 owner_router.include_router(course_content.router)
+owner_router.include_router(enrollments.router)
