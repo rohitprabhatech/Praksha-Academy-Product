@@ -56,8 +56,8 @@ uvicorn app.main:app --reload
 
 | Sprint | File | Branch | Assigned To | Status |
 |--------|------|--------|-------------|--------|
-| Sprint 03 | [SPRINT-03-AUTH.md](./SPRINT-03-AUTH.md) | `feature/sprint-03-auth-apis` | | 🔄 In Progress |
-| Sprint 04 | [SPRINT-04-PLATFORM-ADMIN.md](./SPRINT-04-PLATFORM-ADMIN.md) | `feature/sprint-04-platform-admin` | | ⬜ Not Started |
+| Sprint 03 | [SPRINT-03-AUTH.md](./SPRINT-03-AUTH.md) | `feature/sprint-03-auth-apis` | | ✅ Done (local) |
+| Sprint 04 | [SPRINT-04-PLATFORM-ADMIN.md](./SPRINT-04-PLATFORM-ADMIN.md) | `feature/sprint-04-platform-admin` | | 🔄 In Progress |
 | Sprint 05 | [SPRINT-05-TENANT-SETUP.md](./SPRINT-05-TENANT-SETUP.md) | `feature/sprint-05-tenant-setup` | | ⬜ Not Started |
 | Sprint 06 | [SPRINT-06-COURSES.md](./SPRINT-06-COURSES.md) | `feature/sprint-06-courses` | | ⬜ Not Started |
 | Sprint 07 | [SPRINT-07-LMS-ASSESSMENTS.md](./SPRINT-07-LMS-ASSESSMENTS.md) | `feature/sprint-07-lms-assessments` | | ⬜ Not Started |
