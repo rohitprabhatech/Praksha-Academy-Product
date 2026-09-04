@@ -5,9 +5,11 @@ from fastapi import APIRouter
 from app.api.v1.owner import (
     batches,
     classes,
+    cms,
     course_content,
     courses,
     enrollments,
+    finance,
     profile,
     programs,
     students,
@@ -26,3 +28,5 @@ owner_router.include_router(programs.router)
 owner_router.include_router(courses.router)
 owner_router.include_router(course_content.router)
 owner_router.include_router(enrollments.router)
+owner_router.include_router(finance.router)
+owner_router.include_router(cms.router)
