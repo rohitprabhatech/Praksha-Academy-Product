@@ -115,6 +115,7 @@ class CourseLesson(TenantOwnedMixin, TimestampMixin, SoftDeleteMixin, Base):
     content: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     video_url: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
     duration_minutes: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    is_free_preview: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default="0")
     sort_order: Mapped[int] = mapped_column(Integer, nullable=False, server_default="0")
     status: Mapped[str] = mapped_column(
         Enum("active", "inactive", name="course_lesson_status", native_enum=True),
