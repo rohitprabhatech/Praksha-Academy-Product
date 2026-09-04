@@ -1,10 +1,9 @@
-"""Security helpers (password hashing + JWT utilities).
+"""Security helpers: password hashing, JWT, OTP, and token hashing."""
 
-Full authentication endpoints arrive in Sprint 03.
-These helpers are scaffolding only so later sprints share one place
-for hashing and token configuration.
-"""
+from __future__ import annotations
 
+import hashlib
+import secrets
 from datetime import datetime, timedelta, timezone
 from typing import Any, Optional
 
@@ -33,17 +32,22 @@ def verify_password(plain_password: str, password_hash: str) -> bool:
 
 
 def create_access_token(
-    subject: str,
-    claims: Optional[dict[str, Any]] = None,
+    user_id: str,
+    tenant_id: Optional[str],
+    roles: list[str],
     expires_minutes: Optional[int] = None,
 ) -> str:
-    """Create a signed JWT access token."""
+    """Create a short-lived JWT access token."""
     expire = datetime.now(timezone.utc) + timedelta(
         minutes=expires_minutes or settings.access_token_expire_minutes
     )
-    payload: dict[str, Any] = {"sub": subject, "exp": expire, "type": "access"}
-    if claims:
-        payload.update(claims)
+    payload: dict[str, Any] = {
+        "sub": user_id,
+        "tenant_id": tenant_id,
+        "roles": roles,
+        "exp": expire,
+        "type": "access",
+    }
     return jwt.encode(
         payload,
         settings.jwt_secret_key,
@@ -51,27 +55,20 @@ def create_access_token(
     )
 
 
-def create_refresh_token(
-    subject: str,
-    claims: Optional[dict[str, Any]] = None,
-    expires_days: Optional[int] = None,
-) -> str:
-    """Create a signed JWT refresh token."""
-    expire = datetime.now(timezone.utc) + timedelta(
-        days=expires_days or settings.refresh_token_expire_days
-    )
-    payload: dict[str, Any] = {"sub": subject, "exp": expire, "type": "refresh"}
-    if claims:
-        payload.update(claims)
-    return jwt.encode(
-        payload,
+def decode_access_token(token: str) -> dict[str, Any]:
+    """Decode and validate a JWT access token. Raises JWTError on failure."""
+    payload = jwt.decode(
+        token,
         settings.jwt_secret_key,
-        algorithm=settings.jwt_algorithm,
+        algorithms=[settings.jwt_algorithm],
     )
+    if payload.get("type") != "access":
+        raise JWTError("Invalid token type")
+    return payload
 
 
 def decode_token(token: str) -> dict[str, Any]:
-    """Decode and validate a JWT. Raises JWTError on failure."""
+    """Decode and validate any JWT. Raises JWTError on failure."""
     return jwt.decode(
         token,
         settings.jwt_secret_key,
@@ -89,3 +86,33 @@ def safe_decode_token(token: str) -> Optional[dict[str, Any]]:
         return decode_token(token)
     except JWTError:
         return None
+
+
+def generate_refresh_token() -> tuple[str, str]:
+    """
+    Returns (raw_token, hashed_token).
+    Store only hashed_token in DB. Send raw_token to the client.
+    """
+    raw = secrets.token_urlsafe(64)
+    hashed = hashlib.sha256(raw.encode()).hexdigest()
+    return raw, hashed
+
+
+def generate_otp() -> tuple[str, str]:
+    """
+    Returns (plain_otp, hashed_otp).
+    Send plain_otp to the user. Store hashed_otp in DB.
+    """
+    plain = str(secrets.randbelow(900000) + 100000)  # 6-digit OTP
+    hashed = hashlib.sha256(plain.encode()).hexdigest()
+    return plain, hashed
+
+
+def hash_token(token: str) -> str:
+    """Hash any string token for safe DB storage."""
+    return hashlib.sha256(token.encode()).hexdigest()
+
+
+def utcnow_naive() -> datetime:
+    """UTC now as naive datetime (matches MySQL DateTime columns)."""
+    return datetime.now(timezone.utc).replace(tzinfo=None)

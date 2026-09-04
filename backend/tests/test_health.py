@@ -61,14 +61,15 @@ def test_password_hashing_roundtrip():
 
 def test_jwt_create_and_decode():
     token = create_access_token(
-        subject="user-uuid-demo",
-        claims={"role": "owner", "tenant_id": None},
+        user_id="user-uuid-demo",
+        tenant_id=None,
+        roles=["owner"],
     )
     payload = safe_decode_token(token)
     assert payload is not None
     assert payload["sub"] == "user-uuid-demo"
     assert payload["type"] == "access"
-    assert payload["role"] == "owner"
+    assert payload["roles"] == ["owner"]
 
 
 def test_generate_uuid_format():

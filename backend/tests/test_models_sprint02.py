@@ -13,7 +13,7 @@ from app.core.database import Base, engine
 import app.models  # noqa: F401
 
 
-EXPECTED_TABLE_COUNT = 54
+EXPECTED_TABLE_COUNT = 65
 
 SCHEMA_TABLES = {
     "tenants",
@@ -27,13 +27,19 @@ SCHEMA_TABLES = {
     "user_roles",
     "password_reset_tokens",
     "email_verifications",
+    "refresh_tokens",
+    "user_sessions",
     "platform_audit_logs",
     "tenant_profiles",
+    "tenant_website_settings",
     "teacher_profiles",
     "student_profiles",
     "academic_classes",
     "subjects",
     "batches",
+    "batch_students",
+    "programs",
+    "program_courses",
     "courses",
     "course_teachers",
     "course_modules",
@@ -43,6 +49,9 @@ SCHEMA_TABLES = {
     "lesson_progress",
     "study_materials",
     "live_classes",
+    "announcements",
+    "question_bank",
+    "question_bank_options",
     "assignments",
     "assignment_submissions",
     "quizzes",
@@ -57,6 +66,8 @@ SCHEMA_TABLES = {
     "exam_answers",
     "marks",
     "attendance_records",
+    "fee_structures",
+    "fee_invoices",
     "payments",
     "coupons",
     "coupon_redemptions",
