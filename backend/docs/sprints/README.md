@@ -57,8 +57,8 @@ uvicorn app.main:app --reload
 | Sprint | File | Branch | Assigned To | Status |
 |--------|------|--------|-------------|--------|
 | Sprint 03 | [SPRINT-03-AUTH.md](./SPRINT-03-AUTH.md) | `feature/sprint-03-auth-apis` | | ✅ Done (local) |
-| Sprint 04 | [SPRINT-04-PLATFORM-ADMIN.md](./SPRINT-04-PLATFORM-ADMIN.md) | `feature/sprint-04-platform-admin` | | 🔄 In Progress |
-| Sprint 05 | [SPRINT-05-TENANT-SETUP.md](./SPRINT-05-TENANT-SETUP.md) | `feature/sprint-05-tenant-setup` | | ⬜ Not Started |
+| Sprint 04 | [SPRINT-04-PLATFORM-ADMIN.md](./SPRINT-04-PLATFORM-ADMIN.md) | `feature/sprint-04-platform-admin` | | ✅ Done (local) |
+| Sprint 05 | [SPRINT-05-TENANT-SETUP.md](./SPRINT-05-TENANT-SETUP.md) | `feature/sprint-05-tenant-setup` | | 🔄 In Progress |
 | Sprint 06 | [SPRINT-06-COURSES.md](./SPRINT-06-COURSES.md) | `feature/sprint-06-courses` | | ⬜ Not Started |
 | Sprint 07 | [SPRINT-07-LMS-ASSESSMENTS.md](./SPRINT-07-LMS-ASSESSMENTS.md) | `feature/sprint-07-lms-assessments` | | ⬜ Not Started |
 | Sprint 08 | [SPRINT-08-FINANCE-CMS.md](./SPRINT-08-FINANCE-CMS.md) | `feature/sprint-08-finance-cms` | | ⬜ Not Started |

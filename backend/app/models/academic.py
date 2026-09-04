@@ -71,6 +71,7 @@ class Batch(TenantOwnedMixin, TimestampMixin, SoftDeleteMixin, Base):
     code: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
     start_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
     end_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
+    max_students: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     status: Mapped[str] = mapped_column(
         Enum("active", "inactive", "completed", name="batch_status", native_enum=True),
         nullable=False,
